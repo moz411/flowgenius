@@ -1,0 +1,5 @@
+nicegui==2.15.0
+openai==1.76.2
+redis==6.0.0
+authlib==1.5.2
+stripe==12.1.0

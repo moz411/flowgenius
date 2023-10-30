@@ -1,0 +1,75 @@
+---
+
+min_mycredits: 4
+max_tries: 3
+
+placeholder: Enter your request here
+
+welcome:
+  - ["Bot", "Welcome to FlowGenius!"]
+
+anchor_style: >
+  <style>a:link, a:visited {color: inherit !important; text-decoration: none; font-weight: 500}</style>
+
+ia:
+  - role: system
+    content: You are a senior developer with more than 5 years of experience
+  - role: user
+    content: 
+
+content: |
+  Your task is to generate professional-grade Mermaid code following %s Mermaid syntax.
+  The code should accurately represent a graph or network, including nodes and edges, 
+  Include details. Do not include styling. The Mermaid syntax must be precise and correct.
+
+patterns: ['flowchart', 'journey', 'mindmap', 'C4Context', 'timeline', 'sequenceDiagram', 'stateDiagram', 'graph',  'gantt' ]
+
+buy: Did you enjoy it? Get 500 credits for only €7!
+
+failed: |
+  I am sorry, but I cannot generate code for this request as it does not correspond to a diagram or network. 
+  If you have another request related to code generation, please feel free to let me know.
+
+comment: Flowchart generator built with [NiceGUI](https://nicegui.io) using %s model
+
+jsdecode: |
+  var div = document.getElementById("c%d");
+  var svgElement = div.querySelector('svg');
+  var svgData = new XMLSerializer().serializeToString(svgElement);
+  var blob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  
+  a.href = url;
+  a.download = "%s.svg";
+  a.click();
+  URL.revokeObjectURL(url);
+
+getsvg: |
+  var div = document.getElementById("c%d");
+  var svgElement = div.querySelector('svg');
+  var svgData = new XMLSerializer().serializeToString(svgElement);
+  return svgData;
+
+fullscreen: |
+  var div = document.getElementById("c%d");
+  var svgElement = div.querySelector('svg');
+  svgElement.style.backgroundColor = 'white';
+  let scale = 1; 
+  svgElement.style.objectFit = 'cover';
+  svgElement.style.width = '100vw';
+  svgElement.style.height = '100vh';
+  svgElement.onwheel = function(event) {
+    event.preventDefault();
+    const scaleAmount = 0.1;
+    if (event.deltaY < 0) {scale *= (1 + scaleAmount);
+      } else {scale /= (1 + scaleAmount);}
+    svgElement.style.transform = `scale(${scale})`;
+    svgElement.style.transformOrigin = 'center';
+  };
+
+tests:
+  - timeline incas empire
+  - sequenceDiagram eating at a restaurant
+  - stateDiagram buy a drink at the beverage dispenser. It refunds me 5 cents
+  - journey Ulysses from James Joyce
