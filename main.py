@@ -234,7 +234,7 @@ async def main(request: Request):
 
     # Main content
     if not user:
-        ui.image('static/google_login.svg')
+        ui.image('static/authcode_flow.svg')
 
     # app interface
     @ui.refreshable
