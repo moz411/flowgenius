@@ -65,13 +65,14 @@ def jscode_download(id):
 
 def store_data(user_id, key, data):
     if user_id:
-        json_data = json.dumps(data)
-        redis_db.set(f"{user_id}:flowgenius:{key}", json_data)
+        data = base64.b64encode(json.dumps(data).encode('utf-8'))
+        redis_db.set(f"{user_id}:flowgenius:{key}", data)
 
 def retrieve_data(user_id, key):
     if user_id:
         data = redis_db.get(f"{user_id}:flowgenius:{key}")
         if data:
+            data = base64.b64decode(data)
             return json.loads(data.decode('utf-8'))
     return None
 
@@ -135,7 +136,7 @@ async def stripe_webhook(request: Request):
     if (event['type'] == 'checkout.session.completed' and 
         event['data']['object']['payment_status'] == 'paid'):
         user_id = event['data']['object']['metadata']['user_id']
-        store_data(user_id, 'mycredits', 500)
+        store_data(user_id, 'tokens', 10000)
 
 @ui.page('/')
 async def main(request: Request):
@@ -145,12 +146,11 @@ async def main(request: Request):
     graph_kinds = {i: i for i in defaults['patterns']}
 
     async def search(searchbar, spinner):
-        mycredits = retrieve_data(user_id, 'mycredits') or defaults['min_mycredits']
+        tokens = retrieve_data(user_id, 'tokens') or defaults['min_tokens']
         searchbar.visible = False
         spinner.visible = True
         user_messages = await query_ia(searchbar.value, graph_kind=select_graph.value)
         store_data(user_id, 'messages', user_messages)
-        store_data(user_id, 'mycredits', mycredits-1)
         searchbar.value = ''
         chat_messages.refresh()
         spinner.visible = False
@@ -179,6 +179,8 @@ async def main(request: Request):
             try:
                 content = response.choices[0].message.content
                 mermaid_code = extract_text_from_patterns(content)
+                used_tokens = response.usage.total_tokens
+                store_data(user_id, 'tokens', tokens-used_tokens)
                 user_messages.append(('Chart', mermaid_code))
                 tries = defaults['max_tries']
             except (TimeoutError,SyntaxError,IndexError):
@@ -225,10 +227,14 @@ async def main(request: Request):
                 ui.image(user['picture']).classes('rounded-full w-10 h-10')
                 ui.icon('expand_more')
                 with ui.menu():
-                    mycredits = retrieve_data(user_id, 'mycredits')
-                    if mycredits == None: mycredits = defaults['min_mycredits']
-                    ui.menu_item(f"{mycredits} mycredits")
+                    tokens = retrieve_data(user_id, 'tokens')
+                    if tokens == None: tokens = defaults['min_tokens']
+                    ui.menu_item(f"{tokens} tokens")
                     select_graph = ui.select(graph_kinds, label="Graph kind")
+                    with ui.menu_item().classes('p-0 m-0'):
+                        ui.button('run', icon='send', on_click=lambda: search(searchbar, spinner)).classes('w-full')
+                    with ui.menu_item().classes('p-0 m-0'):
+                        ui.button('EULA', icon='policy', on_click=lambda: ui.navigate.to('/EULA')).classes('w-full')
                     with ui.menu_item().classes('p-0 m-0'):
                         ui.button('logout', icon='logout', on_click=lambda: ui.navigate.to('/logout')).classes('w-full')
 
@@ -284,9 +290,9 @@ async def main(request: Request):
                     "flat icon=send"
                 ).style("transform: rotate(-90deg); font-size: 1.5em; padding: 10px;")
 
-            mycredits = retrieve_data(user_id, 'mycredits')
-            if mycredits == None: mycredits = defaults['min_mycredits']
-            if user_id and mycredits <= 0:
+            tokens = retrieve_data(user_id, 'tokens')
+            if tokens == None: tokens = defaults['min_tokens']
+            if user_id and tokens <= 0:
                 searchbar.visible = False
                 searchbutton.visible = False
                 buy_link = generate_buy_link()

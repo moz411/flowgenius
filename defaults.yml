@@ -1,6 +1,6 @@
 ---
 
-min_mycredits: 4
+min_tokens: 500
 max_tries: 3
 
 placeholder: Enter your request here
