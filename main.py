@@ -142,11 +142,15 @@ async def stripe_webhook(request: Request):
 async def main(request: Request):
     user = request.session.get('user', None)
     user_id = user.get('id') if user else None
-    user_messages = retrieve_data(user_id, 'messages') or defaults['welcome']
+    if user_id:
+        user_messages = retrieve_data(user_id, 'messages') or defaults['welcome']
+        tokens = retrieve_data(user_id, 'tokens')
+    else: 
+        user_messages = defaults['welcome']
+        tokens = defaults['min_tokens']
     graph_kinds = {i: i for i in defaults['patterns']}
 
     async def search(searchbar, spinner):
-        tokens = retrieve_data(user_id, 'tokens') or defaults['min_tokens']
         searchbar.visible = False
         spinner.visible = True
         user_messages = await query_ia(searchbar.value, graph_kind=select_graph.value)
@@ -227,9 +231,10 @@ async def main(request: Request):
                 ui.image(user['picture']).classes('rounded-full w-10 h-10')
                 ui.icon('expand_more')
                 with ui.menu():
-                    tokens = retrieve_data(user_id, 'tokens')
-                    if tokens == None: tokens = defaults['min_tokens']
-                    ui.menu_item(f"{tokens} tokens")
+                    with ui.menu_item().classes('p-0 m-0'):
+                        tokens = retrieve_data(user_id, 'tokens')
+                        ui.label(f'Tokens: {tokens}')
+                    ui.separator()
                     select_graph = ui.select(graph_kinds, label="Graph kind")
                     with ui.menu_item().classes('p-0 m-0'):
                         ui.button('run', icon='send', on_click=lambda: search(searchbar, spinner)).classes('w-full')

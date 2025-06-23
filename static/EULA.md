@@ -30,7 +30,7 @@ In no event shall MOZ42 be liable for any damages (including, without limitation
 MOZ42 reserves the right to amend this EULA at any time and will update the EULA on this page with a new effective date.
 
 9. Governing Law
-This EULA is governed by the laws of [Your Jurisdiction] without regard to its conflict of law provisions.
+This EULA is governed by the laws of France without regard to its conflict of law provisions.
 
 Contact Information
 For questions about this EULA, contact us at thomas.dupouy@moz42.net.
